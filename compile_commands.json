@@ -1,0 +1,47 @@
+[
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/a.out.dir/src/main.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/main.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/main.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/include/glm",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include/glm/..  -o CMakeFiles/glm_static.dir/detail/glm.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include/glm/detail/glm.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include/glm/detail/glm.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/src",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/common-lib.dir/common/utils.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/utils.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/utils.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/src",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/common-lib.dir/common/camera.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/camera.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/camera.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/src",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/common-lib.dir/common/light.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/light.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/light.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/src",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/common-lib.dir/common/shader.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/shader.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/shader.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/src",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/common-lib.dir/common/mesh.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/mesh.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/mesh.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/src",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/common-lib.dir/common/model.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/model.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/model.cpp"
+},
+{
+  "directory": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/build/src",
+  "command": "/usr/bin/c++  -I/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/include  -o CMakeFiles/common-lib.dir/common/wrapper_glfw.cpp.o -c /home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/wrapper_glfw.cpp",
+  "file": "/home/arsic/Desktop/uni/graphics/assignments/saltenis_tadas_ass2/code/src/common/wrapper_glfw.cpp"
+}
+]
