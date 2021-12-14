@@ -63,6 +63,7 @@ void Mesh::draw(Shader *shader)
 {
     GLuint diffuseNumber = 1;
     GLuint normalNumber = 1;
+    GLuint cubeNumber = 1;
     for (int i = 0; i < textures.size(); i++)
     {
         /* activate proper texture unit before binding */
@@ -76,10 +77,17 @@ void Mesh::draw(Shader *shader)
             number = std::to_string(diffuseNumber++);
         else if (name == "texture_normal")
             number = std::to_string(normalNumber++);
+        else if (name == "cube_map")
+            number = std::to_string(cubeNumber++);
 
         /* std::cout << "material." + name + number << std::endl; */
         shader->setInt(("material." + name + number).c_str(), i);
-        glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        if (name  == "cube_map")
+        {
+            glBindTexture(GL_TEXTURE_CUBE_MAP, textures[i].id);
+        }
+        else
+            glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
     glActiveTexture(GL_TEXTURE0);
 

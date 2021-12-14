@@ -9,23 +9,28 @@
  * constructor
  * retrieve, compile and link shaders
  */
-Shader::Shader(const char *vertexPath, const char *fragmentPath)
+Shader::Shader(const char *vertexPath, const char *fragmentPath, const char *geometryPath)
 {
-    std::ifstream vShaderFile;
-    std::ifstream fShaderFile;
-
     /* retrieve the vertex/fragment source code from file paths */
     std::string vShaderCode = readFile(vertexPath);
     std::string fShaderCode = readFile(fragmentPath);
+    std::string gShaderCode;
+    if (geometryPath != nullptr)
+        gShaderCode = readFile(geometryPath);
 
     /* compile shaders */
     GLuint vertex = compileShader(GL_VERTEX_SHADER, vShaderCode);
     GLuint fragment = compileShader(GL_FRAGMENT_SHADER, fShaderCode);
+    GLuint geometry;
+    if (geometryPath != nullptr)
+        geometry = compileShader(GL_GEOMETRY_SHADER, gShaderCode);
 
     /* link shaders */
     id = glCreateProgram();
     glAttachShader(id, vertex);
     glAttachShader(id, fragment);
+    if (geometryPath != nullptr)
+        glAttachShader(id, geometry);
     glLinkProgram(id);
 
     /* print linking errors if any */
@@ -47,6 +52,8 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath)
     /* delete the shaders as they're already linked into our program */
     glDeleteShader(vertex);
     glDeleteShader(fragment);
+    if (geometryPath != nullptr)
+        glDeleteShader(geometry);
 }
 
 /**

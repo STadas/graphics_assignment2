@@ -9,11 +9,11 @@ struct Transform
 
 struct Light
 {
-  vec4 position;
+	vec4 position;
 
-  float ambient;
-  float diffuse;
-  float specular;
+	float ambient;
+	float diffuse;
+	float specular;
 };
 
 uniform Transform transform;
@@ -25,7 +25,7 @@ layout(location = 2) in vec2 tex_coords;
 layout(location = 3) in vec3 tangent;
 
 out vec2 ftex_coords;
-out vec3 fview_dir, flight_pos, ftest_color;
+out vec3 fview_dir, flight_pos;
 out mat3 toObjectLocal;
 
 void main()
@@ -43,9 +43,7 @@ void main()
 							  tang.y, bitang.y, norm.y,
 							  tang.z, bitang.z, norm.z);
 
-	ftest_color = tang;
-
-	flight_pos = toObjectLocal * vec3(light.position - (mv_matrix * h_position));
+	flight_pos = toObjectLocal * vec3(transform.view * light.position - (mv_matrix * h_position));
 	fview_dir = normalize(toObjectLocal * normalize(-vec3(mv_matrix * h_position)));
 	ftex_coords = tex_coords;
 

@@ -105,7 +105,7 @@ int GLWrapper::eventLoop()
     while (!glfwWindowShouldClose(window))
     {
         // Call function to draw your graphics
-        renderer();
+        loop();
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -122,10 +122,10 @@ void GLWrapper::setErrorCallback(void (*func)(int error, const char *description
     glfwSetErrorCallback(func);
 }
 
-/* Register a display function that renders in the window */
-void GLWrapper::setRendererCallback(void (*func)())
+/* Register a loop function */
+void GLWrapper::setLoopCallback(void (*func)())
 {
-    this->renderer = func;
+    this->loop = func;
 }
 
 /* Register a callback that runs after the window gets resized */
@@ -139,16 +139,4 @@ void GLWrapper::setKeyCallback(void (*func)(GLFWwindow *window, int key, int sca
                                             int action, int mods))
 {
     glfwSetKeyCallback(window, func);
-}
-
-/* returns window width */
-int GLWrapper::getWidth()
-{
-    return width;
-}
-
-/* returns window height */
-int GLWrapper::getHeight()
-{
-    return height;
 }

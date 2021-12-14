@@ -7,9 +7,11 @@
 /* TODO: fixed framerate */
 
 #include "main.h"
+#include <math.h>
 
 /* window variables */
-GLfloat aspectRatio;
+GLfloat scrWidth;
+GLfloat scrHeight;
 
 /* camera */
 OrbitCamera *camera;
@@ -17,16 +19,27 @@ OrbitCamera *camera;
 /* lights */
 Light *mainLight;
 
-/* shader programs */
-Shader *defaultShader;
-Shader *emissiveShader;
-Shader *texturedShader;
-Shader *texturedWithNormalsShader;
+/* shadows */
+Texture shadowMap;
+GLuint depthMapFBO;
+const GLfloat farPlane = 200.f;
+const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
-/* imported models */
-Model *curtainModel;
-Model *floorModel;
-Model *stageLightsModel;
+/* shader programs */
+Shader *emissiveShader;
+Shader *defaultShader;
+Shader *depthShader;
+
+/* Shader *texturedShader; */
+Shader *texturedNMapShader;
+
+Shader *defaultShadowsShader;
+Shader *texturedNMapShadowsShader;
+
+/* pairs of non-special models with shaders */
+std::map<Model*, Shader*> withLighting;
+
+/* special models */
 Model *sphereModel;
 
 /* animation helper variables */
@@ -48,13 +61,14 @@ void init(GLWrapper *glw)
     glEnable(GL_BLEND);
 
     /* set basic variables */
-    aspectRatio = GLfloat(glw->getWidth()) / GLfloat(glw->getHeight());
+    scrWidth = glw->getWidth();
+    scrHeight = glw->getHeight();
 
     /* make camera */
     camera = new OrbitCamera(glm::vec3(0.f, 0.f, 1.f));
 
     /* make lights */
-    mainLight = new Light(glm::vec4(0.f, 1.f, 1.f, 1.f), 0.01f, 1.f, 1.f);
+    mainLight = new Light(glm::vec4(0.f, 1.f, 0.f, 1.f), 0.1f, 1.f, 1.f);
 
     /* set animation variables */
     speed = 1.f;
@@ -62,24 +76,65 @@ void init(GLWrapper *glw)
     /* load shaders */
     defaultShader =
         new Shader("assets/shaders/default.vert", "assets/shaders/default.frag");
-    texturedShader =
-        new Shader("assets/shaders/default.vert", "assets/shaders/textured.frag");
-    texturedWithNormalsShader =
-        new Shader("assets/shaders/tangents.vert", "assets/shaders/textured_normalmap.frag");
     emissiveShader =
         new Shader("assets/shaders/basic.vert", "assets/shaders/emissive.frag");
+    depthShader =
+        new Shader("assets/shaders/depth.vert", "assets/shaders/depth.frag", "assets/shaders/depth.geom");
+    /* texturedShader = */
+    /*     new Shader("assets/shaders/default.vert", "assets/shaders/textured.frag"); */
+    texturedNMapShader =
+        new Shader("assets/shaders/tangents.vert", "assets/shaders/textured_nmap.frag");
+    defaultShadowsShader =
+        new Shader("assets/shaders/default_shadows.vert", "assets/shaders/default_shadows.frag");
+    texturedNMapShadowsShader =
+        new Shader("assets/shaders/tangents_shadows.vert", "assets/shaders/textured_nmap_shadows.frag");
 
     /* load models */
-    curtainModel = new Model("assets/objs/curtain/curtain.obj");
-    floorModel = new Model("assets/objs/floor/floor.obj");
-    stageLightsModel = new Model("assets/objs/stage_lights/stage_lights.obj");
+    withLighting = {
+        { new Model("assets/objs/floor/floor.obj"), texturedNMapShadowsShader },
+        { new Model("assets/objs/curtain/curtain.obj"), defaultShadowsShader },
+        { new Model("assets/objs/stage_lights/stage_lights.obj"), defaultShadowsShader },
+    };
     sphereModel = new Model("assets/objs/light_sphere/light_sphere.obj");
+
+
+    /* prepare depth cubemap texture */
+    shadowMap.type = "cube_map";
+    glGenTextures(1, &(shadowMap.id));
+    glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap.id);
+    for (int i = 0; i < 6; i++)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+                     SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    /* prepare depth framebuffer */
+    glGenFramebuffers(1, &depthMapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMap.id, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    /* add depth texture to all lit models for it to be applied later */
+    for (auto &modelShader : withLighting)
+    {
+        for (auto &mesh : modelShader.first->meshes)
+        {
+            mesh.textures.push_back(shadowMap);
+        }
+    }
 }
 
 /**
- * the draw loop that runs until the application is stopped
+ * wrapper function for stuff needed to be done outside of renders but inside the loop.
+ * needs to have at least one render() call to actually draw anything
  */
-void render()
+void loop()
 {
     /* set background color to blue */
     glClearColor(0.f, 0.f, 1.f, 1.f);
@@ -87,28 +142,68 @@ void render()
     /* /1* set background color to white *1/ */
     /* glClearColor(1.f, 1.f, 1.f, 1.f); */
 
+    /* set background color to gray */
+    /* glClearColor(0.1f, 0.1f, 0.1f, 1.f); */
+
     /* set background color to black */
     /* glClearColor(0.f, 0.f, 0.f, 1.f); */
 
     /* clear the color and frame buffers */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /* reset projection */
-    camera->projection = glm::perspective(glm::radians(70.f), aspectRatio, 0.3f, 100.f);
+    /* depth render */
+    glm::mat4 shadowProjection = glm::perspective(glm::radians(90.f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, 1.f, farPlane);
+    std::vector<glm::mat4> shadowTransforms;
+    glm::vec3 lightPosV3 = glm::vec3(mainLight->position);
+    /* std::cout << lightPosV3.x << " " << lightPosV3.y << " " << lightPosV3.z << std::endl; */
 
-    /* orbit camera */
+    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f)));
+    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(-1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f)));
+    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f)));
+    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, 0.f, -1.f)));
+    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, -1.f, 0.f)));
+    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, -1.f, 0.f)));
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    depthShader->use();
+    for (unsigned int i = 0; i < 6; ++i)
+        depthShader->setMat4("shadow_mat[" + std::to_string(i) + "]", shadowTransforms[i]);
+    depthShader->setFloat("far_plane", farPlane);
+    depthShader->setVec3("light_pos", lightPosV3);
+    render(depthShader); // render depth
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    /* regular render */
+    glViewport(0, 0, scrWidth, scrHeight);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /* projection matrix */
+    camera->projection = glm::perspective(glm::radians(90.f), scrWidth / scrHeight, 0.1f, 100.f);
+
+    /* orbit camera (view matrix) */
     camera->view = lookAt(camera->position, camera->target, camera->up);
     camera->view = translate(camera->view, glm::vec3(0.f, 0.f, -camera->radius));
     camera->view = rotate(camera->view, glm::radians(camera->pitch), glm::vec3(1, 0, 0));
     camera->view = rotate(camera->view, glm::radians(camera->yaw), glm::vec3(0, 1, 0));
 
+    render();
+}
+
+/**
+ * the draw function that should be used in a loop that runs until the application is stopped
+ */
+void render(Shader *overrideShader)
+{
     /* model matrix */
     std::stack<glm::mat4> model;
     model.push(glm::mat4(1.0f));
 
-    /* draw stuff */
+    /* draw opaque stuff */
+
     model.push(model.top());
-    drawStatic(model);
+    drawStatic(model, overrideShader);
     model.pop();
 
     model.push(model.top());
@@ -117,7 +212,7 @@ void render()
 
     glDepthMask(GL_FALSE);
 
-    /* draw non-opaque stuff */
+    /* draw non-opaque stuff here */
 
     glDepthMask(GL_TRUE);
 }
@@ -125,13 +220,16 @@ void render()
 /**
  * draw imported .obj models that we're not planning on moving
  */
-void drawStatic(std::stack<glm::mat4> &model)
+void drawStatic(std::stack<glm::mat4> &model, Shader *overrideShader)
 {
     model.top() = translate(model.top(), glm::vec3(0.f, 0.f, 0.f));
 
-    floorModel->draw(texturedWithNormalsShader, camera, mainLight, model.top());
-    curtainModel->draw(defaultShader, camera, mainLight, model.top());
-    stageLightsModel->draw(defaultShader, camera, mainLight, model.top());
+    if (overrideShader == nullptr)
+        for (auto &modelShader : withLighting)
+            modelShader.first->draw(modelShader.second, camera, mainLight, model.top(), farPlane);
+    else
+        for (auto &modelShader : withLighting)
+            modelShader.first->draw(overrideShader, camera, mainLight, model.top(), farPlane);
 }
 
 /**
@@ -142,7 +240,7 @@ void drawMainLightSphere(std::stack<glm::mat4> &model)
     model.top() = translate(model.top(), glm::vec3(mainLight->position));
     model.top() = scale(model.top(), glm::vec3(0.1f, 0.1f, 0.1f));
 
-    sphereModel->draw(emissiveShader, camera, mainLight, model.top());
+    sphereModel->draw(emissiveShader, camera, mainLight, model.top(), farPlane);
 }
 
 /**
@@ -153,7 +251,8 @@ void reshape(GLFWwindow *window, int w, int h)
     glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 
     /* store aspect ratio to use for our perspective projection */
-    aspectRatio = GLfloat(w) / GLfloat(h);
+    scrWidth = GLfloat(w);
+    scrHeight = GLfloat(h);
 }
 
 /**
@@ -202,7 +301,7 @@ int main()
     GLWrapper *glw = new GLWrapper(1024, 768, "Lab3 start example");
 
     /* register the callback functions */
-    glw->setRendererCallback(render);
+    glw->setLoopCallback(loop);
     glw->setKeyCallback(keyCallback);
     glw->setReshapeCallback(reshape);
 
@@ -222,15 +321,28 @@ int main()
 
     glw->eventLoop();
 
+    /* delete misc pointers */
     delete glw;
     delete camera;
     delete mainLight;
 
+    /* delete shader pointers */
     delete defaultShader;
     delete emissiveShader;
+    /* delete texturedShader; */
+    delete texturedNMapShader;
+    delete depthShader;
+    delete defaultShadowsShader;
+    delete texturedNMapShadowsShader;
 
-    delete curtainModel;
+    /* delete model pointers */
     delete sphereModel;
+    /* https://stackoverflow.com/a/27175070 */
+    for (auto it = withLighting.begin(); it != withLighting.end();)
+    {
+        delete it->first;
+        it = withLighting.erase(it);
+    }
 
     return 0;
 }

@@ -2,11 +2,11 @@
 
 struct Material
 {
-  vec3 ambient;
-  vec3 diffuse;
-  vec3 specular;
-  float shininess;
-  sampler2D texture_diffuse1;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+    sampler2D texture_diffuse1;
 };
 
 uniform Material material;

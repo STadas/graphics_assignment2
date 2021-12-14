@@ -19,11 +19,11 @@ Model::Model(const char *modelPath)
 /**
  * draw all of the meshes in the model
  */
-void Model::draw(Shader *shader, OrbitCamera *camera, Light *light, glm::mat4 &m4Model)
+void Model::draw(Shader *shader, OrbitCamera *camera, Light *light, glm::mat4 &m4Model, float farPlane)
 {
     shader->use();
 
-    shader->setVec4("light.position", camera->view * light->position);
+    shader->setVec4("light.position", light->position);
     shader->setFloat("light.ambient", light->ambient);
     shader->setFloat("light.diffuse", light->diffuse);
     shader->setFloat("light.specular", light->specular);
@@ -31,6 +31,8 @@ void Model::draw(Shader *shader, OrbitCamera *camera, Light *light, glm::mat4 &m
     shader->setMat4("transform.view", camera->view);
     shader->setMat4("transform.projection", camera->projection);
     shader->setMat4("transform.model", m4Model);
+
+    shader->setFloat("far_plane", farPlane);
 
     for (Mesh mesh : meshes)
     {

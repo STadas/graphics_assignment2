@@ -27,7 +27,7 @@ public:
     std::vector<Mesh> meshes;
 
     void draw(Shader *shader);
-    void draw(Shader *shader, OrbitCamera *camera, Light *light, glm::mat4 &m4Model);
+    void draw(Shader *shader, OrbitCamera *camera, Light *light, glm::mat4 &m4Model, float farPlane);
 
 private:
     std::string directory;

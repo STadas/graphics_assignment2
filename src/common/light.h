@@ -15,7 +15,4 @@ struct Light {
 
     Light(glm::vec4 position, float ambient = 0.1, float diffuse = 1.0,
           float specular = 1.0);
-
-    void passUniforms(Shader *shader);
-    void passUniforms(Shader *shader, glm::mat4 &view);
 };

@@ -2,19 +2,18 @@
 
 struct Transform
 {
-  mat3 m3_normal;
-  mat4 model;
-  mat4 view;
-  mat4 projection;
+    mat4 model;
+    mat4 view;
+    mat4 projection;
 };
 
 struct Light
 {
-  vec4 position;
+    vec4 position;
 
-  float ambient;
-  float diffuse;
-  float specular;
+    float ambient;
+    float diffuse;
+    float specular;
 };
 
 // uniform variables
@@ -31,12 +30,13 @@ out vec3 fposition, fnormal, flight_dir;
 
 void main()
 {
-  vec4 h_position = vec4(position, 1.f);
-  mat4 mv_matrix = transform.view * transform.model;
+    vec4 h_position = vec4(position, 1.f);
+    mat4 mv_matrix = transform.view * transform.model;
+	mat3 normalmatrix = mat3(transpose(inverse(mv_matrix)));
 
-  fposition = (mv_matrix * h_position).xyz;
-  fnormal = normalize(transform.m3_normal * normal);
-  flight_dir = light.position.xyz - fposition;
+    fposition = (mv_matrix * h_position).xyz;
+    fnormal = normalize(normalmatrix * normal);
+    flight_dir = (transform.view * light.position).xyz - fposition;
 
-  gl_Position = (transform.projection * mv_matrix) * h_position;
+    gl_Position = (transform.projection * mv_matrix) * h_position;
 }

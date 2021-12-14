@@ -18,7 +18,7 @@ struct Shader
 {
     GLuint id;
 
-    Shader(const char *vertexPath, const char *fragmentPath);
+    Shader(const char *vertexPath, const char *fragmentPath, const char *geometryPath = nullptr);
     void use();
     /* uniform setters */
     void setBool(const std::string &name, GLboolean value) const;

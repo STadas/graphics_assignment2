@@ -18,7 +18,7 @@ private:
     int height;
     const char *title;
     double fps;
-    void (*renderer)();
+    void (*loop)();
     bool running;
     GLFWwindow *window;
 
@@ -26,15 +26,10 @@ public:
     GLWrapper(int width, int height, const char *title);
     ~GLWrapper();
 
-    void setFPS(double fps)
-    {
-        this->fps = fps;
-    }
-
     void displayVersion();
 
     /* Callback registering functions */
-    void setRendererCallback(void (*f)());
+    void setLoopCallback(void (*f)());
     void setReshapeCallback(void (*f)(GLFWwindow *window, int w, int h));
     void setKeyCallback(void (*f)(GLFWwindow *window, int key, int scanCode, int action,
                                   int mods));
@@ -43,6 +38,12 @@ public:
     int eventLoop();
     GLFWwindow *getWindow();
 
-    int getWidth();
-    int getHeight();
+    int getWidth() { return this->width; }
+    /* void setWidth(int width) { this->width = width; } */
+
+    int getHeight() { return this->height; }
+    /* void setHeight(int height) { this->height = height; } */
+
+    double getFPS() { return this->fps; }
+    void setFPS(double fps) { this->fps = fps; }
 };
