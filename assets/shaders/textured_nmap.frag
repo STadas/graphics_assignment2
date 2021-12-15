@@ -14,9 +14,9 @@ struct Material
 
 struct Light
 {
-    vec4 position;
+    vec3 position;
 
-    float ambient;
+    vec3 ambient;
     float diffuse;
     float specular;
 };
@@ -32,10 +32,10 @@ out vec4 output_color;
 void main()
 {
     vec3 tex_diff = texture(material.texture_diffuse1, ftex_coords).rgb;
-    tex_diff = vec3(0.5f, 0.5f, 0.5f);
+    /* tex_diff = vec3(0.5f, 0.5f, 0.5f); */
     vec3 tex_normal = texture(material.texture_normal1, ftex_coords).rgb;
 
-    vec3 ambient = light.ambient * tex_diff;
+    vec3 ambient = light.ambient * material.ambient * tex_diff;
     vec3 N = normalize(2.0 * tex_normal - 1.f);
     vec3 L = normalize(flight_pos);
     vec3 R = normalize(L + fview_dir);
@@ -44,8 +44,8 @@ void main()
     float spec = pow(max(dot(N, R), 0.f), material.shininess);
     vec3 specular = light.specular * spec * material.specular;
 
-    float attK1 = 0.9f;
-    float attK2 = 0.005f;
+    float attK1 = 0.7f;
+    float attK2 = 0.05f;
     float attK3 = 0.001f;
     float attenuation = 1.f / (attK1 +
                                attK2 * length(flight_pos) +

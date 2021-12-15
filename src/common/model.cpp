@@ -23,8 +23,8 @@ void Model::draw(Shader *shader, OrbitCamera *camera, Light *light, glm::mat4 &m
 {
     shader->use();
 
-    shader->setVec4("light.position", light->position);
-    shader->setFloat("light.ambient", light->ambient);
+    shader->setVec3("light.position", light->position);
+    shader->setVec3("light.ambient", light->ambient);
     shader->setFloat("light.diffuse", light->diffuse);
     shader->setFloat("light.specular", light->specular);
 

@@ -13,9 +13,9 @@ struct Material
 
 struct Light
 {
-    vec4 position;
+    vec3 position;
 
-    float ambient;
+    vec3 ambient;
     float diffuse;
     float specular;
 };
@@ -31,7 +31,7 @@ out vec4 output_color;
 float shadow()
 {
     // get vector between fragment position and light position
-    vec3 to_light = ffrag_pos - vec3(light.position);
+    vec3 to_light = ffrag_pos - light.position;
     // use the fragment to light vector to sample from the depth map    
     float closest_depth = texture(material.cube_map1, to_light).r;
     // it is currently in linear range between [0,1], let's re-transform it back to original depth value
@@ -47,7 +47,7 @@ float shadow()
 
 void main()
 {
-    vec3 ambient = light.ambient * material.diffuse;
+    vec3 ambient = light.ambient * material.ambient * material.diffuse;
     vec3 N = normalize(fnormal);
     vec3 L = normalize(flight_pos);
     vec3 R = normalize(L + fview_dir);
@@ -56,8 +56,8 @@ void main()
     float spec = pow(max(dot(N, R), 0.f), material.shininess);
     vec3 specular = light.specular * spec * material.specular;
 
-    float attK1 = 0.9f;
-    float attK2 = 0.005f;
+    float attK1 = 0.7f;
+    float attK2 = 0.05f;
     float attK3 = 0.001f;
     float attenuation = 1.f / (attK1 +
                                attK2 * length(flight_pos) +

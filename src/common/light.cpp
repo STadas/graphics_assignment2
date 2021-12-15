@@ -4,7 +4,7 @@
  */
 #include "light.h"
 
-Light::Light(glm::vec4 position, float ambient, float diffuse, float specular)
+Light::Light(glm::vec3 position, glm::vec3 ambient, float diffuse, float specular)
     : position(position)
     , ambient(ambient)
     , diffuse(diffuse)

@@ -9,9 +9,9 @@ struct Transform
 
 struct Light
 {
-	vec4 position;
+	vec3 position;
 
-	float ambient;
+	vec3 ambient;
 	float diffuse;
 	float specular;
 };
@@ -32,6 +32,8 @@ void main()
 {
 	vec4 h_position = vec4(position, 1.f);
 	vec4 h_tangent = vec4(tangent, 1.f);
+	vec4 h_lightpos = vec4(light.position, 1.f);
+
 	mat4 mv_matrix = transform.view * transform.model;
 	mat3 normalmatrix = mat3(transpose(inverse(mv_matrix)));
 
@@ -43,10 +45,9 @@ void main()
 							  tang.y, bitang.y, norm.y,
 							  tang.z, bitang.z, norm.z);
 
-	// might need to do some toObjectLocal stuff
 	ffrag_pos = vec3(transform.model * h_position);
 
-	flight_pos = toObjectLocal * vec3(transform.view * light.position - (mv_matrix * h_position));
+	flight_pos = toObjectLocal * vec3(transform.view * h_lightpos - (mv_matrix * h_position));
 	fview_dir = normalize(toObjectLocal * normalize(-vec3(mv_matrix * h_position)));
 	ftex_coords = tex_coords;
 

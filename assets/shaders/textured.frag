@@ -13,9 +13,9 @@ struct Material
 
 struct Light
 {
-    vec4 position;
+    vec3 position;
 
-    float ambient;
+    vec3 ambient;
     float diffuse;
     float specular;
 };
@@ -53,14 +53,14 @@ void main()
     vec3 N = normalize(fnormal);
 
     // attenuation
-    float attK1 = 0.9f;
-    float attK2 = 0.005f;
+    float attK1 = 0.7f;
+    float attK2 = 0.05f;
     float attK3 = 0.001f;
     float attenuation = 1.f / (attK1 +
                                attK2 * light_dist +
                                attK3 * pow(light_dist, 2));
 
-    vec4 ambient = light.ambient * tex_diff;
+    vec3 ambient = light.ambient * material.ambient * tex_diff;
     vec4 specular = blinn_phong_specular(L, N);
     vec4 diff_spec = diffuse(L, N, tex_diff) + specular;
 

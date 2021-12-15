@@ -30,3 +30,39 @@ std::string readFile(const char *filePath)
     fileStream.close();
     return content;
 }
+
+transforms_t parseTransformsSection(std::string s)
+{
+    std::cout << "--------------------" << std::endl;
+    std::stringstream ssInput;
+    ssInput.str(s);
+    transforms_t transforms;
+    for (std::string line; getline(ssInput, line, '\n'); )
+    {
+        std::vector<float> pos;
+        std::stringstream ssLine;
+        ssLine.str(line);
+        for (std::string floatStr; getline(ssLine, floatStr, ','); )
+        {
+            /* std::cout << floatStr << " "; */
+            pos.push_back(std::stof(floatStr));
+        }
+        if (pos.size() == 3)
+        {
+            transforms.push_back(glm::vec3(pos[0], pos[1], pos[2]));
+            std::cout << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+        }
+    }
+    return transforms;
+}
+
+std::pair<transforms_t, transforms_t> parseTransformsFile(const char *filePath)
+{
+    std::string tvTransformsStr = readFile(filePath);
+    int splitPos = tvTransformsStr.find("\n\n");
+
+    transforms_t translations = parseTransformsSection(tvTransformsStr.substr(0, splitPos));
+    transforms_t rotations = parseTransformsSection(tvTransformsStr.substr(splitPos, std::string::npos));
+
+    return std::pair<transforms_t, transforms_t>(translations, rotations);
+}

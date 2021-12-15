@@ -11,9 +11,9 @@ struct Transform
 
 struct Light
 {
-	vec4 position;
+	vec3 position;
 
-	float ambient;
+	vec3 ambient;
 	float diffuse;
 	float specular;
 };
@@ -31,13 +31,15 @@ out vec3 ffrag_pos, fview_dir, fnormal, flight_pos;
 void main()
 {
 	vec4 h_position = vec4(position, 1.f);
+	vec4 h_lightpos = vec4(light.position, 1.f);
+
 	mat4 mv_matrix = transform.view * transform.model;
 	mat3 normalmatrix = mat3(transpose(inverse(mv_matrix)));
 
 	ffrag_pos = vec3(transform.model * h_position);
 	fview_dir = (mv_matrix * h_position).xyz;
 	fnormal = normalize(normalmatrix * normal);
-	flight_pos = (transform.view * light.position - (mv_matrix * h_position)).xyz;
+	flight_pos = (transform.view * h_lightpos - (mv_matrix * h_position)).xyz;
 	ftex_coords = tex_coords;
 
 	gl_Position = (transform.projection * mv_matrix) * h_position;

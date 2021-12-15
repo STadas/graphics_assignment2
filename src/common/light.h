@@ -8,11 +8,11 @@
 #include "shader.h"
 
 struct Light {
-    glm::vec4 position;
-    float ambient;
+    glm::vec3 position;
+    glm::vec3 ambient;
     float diffuse;
     float specular;
 
-    Light(glm::vec4 position, float ambient = 0.1, float diffuse = 1.0,
+    Light(glm::vec3 position, glm::vec3 ambient = glm::vec3(0.1f), float diffuse = 1.0,
           float specular = 1.0);
 };

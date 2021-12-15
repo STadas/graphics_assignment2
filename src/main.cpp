@@ -1,13 +1,11 @@
 /** main.h
  * main file
- * Tadas Saltenis November 2021
- * NOTE: modified example from Iain Martin
+ * Tadas Saltenis December 2021
  */
 
 /* TODO: fixed framerate */
 
 #include "main.h"
-#include <math.h>
 
 /* window variables */
 GLfloat scrWidth;
@@ -18,6 +16,7 @@ OrbitCamera *camera;
 
 /* lights */
 Light *mainLight;
+glm::vec3 backgroundColor;
 
 /* shadows */
 Texture shadowMap;
@@ -36,13 +35,18 @@ Shader *texturedNMapShader;
 Shader *defaultShadowsShader;
 Shader *texturedNMapShadowsShader;
 
-/* pairs of non-special models with shaders */
-std::map<Model*, Shader*> withLighting;
+/* pairs of non-special static models with shaders */
+std::map<Model*, Shader*> staticWithLighting;
 
 /* special models */
+Model *tvBodyModel;
+Model *tvScreenModel;
 Model *sphereModel;
 
-/* animation helper variables */
+/* transform helpers */
+std::pair<transforms_t, transforms_t> tvTransforms;
+
+/* animation helpers */
 GLfloat speed;
 
 /**
@@ -60,6 +64,9 @@ void init(GLWrapper *glw)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
+    /* cull back-facing triangles */
+    glEnable(GL_CULL_FACE);
+
     /* set basic variables */
     scrWidth = glw->getWidth();
     scrHeight = glw->getHeight();
@@ -68,7 +75,8 @@ void init(GLWrapper *glw)
     camera = new OrbitCamera(glm::vec3(0.f, 0.f, 1.f));
 
     /* make lights */
-    mainLight = new Light(glm::vec4(0.f, 1.f, 0.f, 1.f), 0.1f, 1.f, 1.f);
+    backgroundColor = glm::vec3(0.4f, 0.4f, 0.8f);
+    mainLight = new Light(glm::vec4(0.f, 1.f, 0.f, 1.f), 0.4f * backgroundColor, 1.f, 1.f);
 
     /* set animation variables */
     speed = 1.f;
@@ -90,13 +98,16 @@ void init(GLWrapper *glw)
         new Shader("assets/shaders/tangents_shadows.vert", "assets/shaders/textured_nmap_shadows.frag");
 
     /* load models */
-    withLighting = {
+    staticWithLighting = {
         { new Model("assets/objs/floor/floor.obj"), texturedNMapShadowsShader },
         { new Model("assets/objs/curtain/curtain.obj"), defaultShadowsShader },
         { new Model("assets/objs/stage_lights/stage_lights.obj"), defaultShadowsShader },
     };
     sphereModel = new Model("assets/objs/light_sphere/light_sphere.obj");
 
+    tvBodyModel = new Model("assets/objs/tv/tv_body.obj");
+    tvScreenModel =  new Model("assets/objs/tv/tv_screen.obj");
+    tvTransforms = parseTransformsFile("assets/objs/tv/transforms.txt");
 
     /* prepare depth cubemap texture */
     shadowMap.type = "cube_map";
@@ -121,7 +132,7 @@ void init(GLWrapper *glw)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     /* add depth texture to all lit models for it to be applied later */
-    for (auto &modelShader : withLighting)
+    for (auto &modelShader : staticWithLighting)
     {
         for (auto &mesh : modelShader.first->meshes)
         {
@@ -137,25 +148,15 @@ void init(GLWrapper *glw)
 void loop()
 {
     /* set background color to blue */
-    glClearColor(0.f, 0.f, 1.f, 1.f);
-
-    /* /1* set background color to white *1/ */
-    /* glClearColor(1.f, 1.f, 1.f, 1.f); */
-
-    /* set background color to gray */
-    /* glClearColor(0.1f, 0.1f, 0.1f, 1.f); */
-
-    /* set background color to black */
-    /* glClearColor(0.f, 0.f, 0.f, 1.f); */
+    glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.f);
 
     /* clear the color and frame buffers */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     /* depth render */
-    glm::mat4 shadowProjection = glm::perspective(glm::radians(90.f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, 1.f, farPlane);
+    glm::mat4 shadowProjection = glm::perspective(glm::radians(90.f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, 0.1f, farPlane);
     std::vector<glm::mat4> shadowTransforms;
     glm::vec3 lightPosV3 = glm::vec3(mainLight->position);
-    /* std::cout << lightPosV3.x << " " << lightPosV3.y << " " << lightPosV3.z << std::endl; */
 
     shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f)));
     shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosV3, lightPosV3 + glm::vec3(-1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f)));
@@ -207,6 +208,10 @@ void render(Shader *overrideShader)
     model.pop();
 
     model.push(model.top());
+    drawTVs(model, overrideShader);
+    model.pop();
+
+    model.push(model.top());
     drawMainLightSphere(model);
     model.pop();
 
@@ -222,14 +227,38 @@ void render(Shader *overrideShader)
  */
 void drawStatic(std::stack<glm::mat4> &model, Shader *overrideShader)
 {
-    model.top() = translate(model.top(), glm::vec3(0.f, 0.f, 0.f));
-
-    if (overrideShader == nullptr)
-        for (auto &modelShader : withLighting)
-            modelShader.first->draw(modelShader.second, camera, mainLight, model.top(), farPlane);
-    else
-        for (auto &modelShader : withLighting)
+    if (overrideShader != nullptr)
+        for (auto &modelShader : staticWithLighting)
             modelShader.first->draw(overrideShader, camera, mainLight, model.top(), farPlane);
+    else
+        for (auto &modelShader : staticWithLighting)
+            modelShader.first->draw(modelShader.second, camera, mainLight, model.top(), farPlane);
+}
+
+void drawTVs(std::stack<glm::mat4> &model, Shader *overrideShader)
+{
+    for (int i = 0; i < tvTransforms.first.size(); i++)
+    {
+        model.push(model.top());
+        {
+            model.top() = translate(model.top(), tvTransforms.first[i]);
+            model.top() = rotate(model.top(), tvTransforms.second[i].x, glm::vec3(1, 0, 0));
+            model.top() = rotate(model.top(), tvTransforms.second[i].y, glm::vec3(0, 1, 0));
+            model.top() = rotate(model.top(), tvTransforms.second[i].z, glm::vec3(0, 0, 1));
+
+            if (overrideShader != nullptr)
+            {
+                tvBodyModel->draw(overrideShader, camera, mainLight, model.top(), farPlane);
+                tvScreenModel->draw(overrideShader, camera, mainLight, model.top(), farPlane);
+            }
+            else
+            {
+                tvBodyModel->draw(defaultShadowsShader, camera, mainLight, model.top(), farPlane);
+                tvScreenModel->draw(emissiveShader, camera, mainLight, model.top(), farPlane);
+            }
+        }
+        model.pop();
+    }
 }
 
 /**
@@ -338,10 +367,10 @@ int main()
     /* delete model pointers */
     delete sphereModel;
     /* https://stackoverflow.com/a/27175070 */
-    for (auto it = withLighting.begin(); it != withLighting.end();)
+    for (auto it = staticWithLighting.begin(); it != staticWithLighting.end();)
     {
         delete it->first;
-        it = withLighting.erase(it);
+        it = staticWithLighting.erase(it);
     }
 
     return 0;

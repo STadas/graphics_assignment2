@@ -19,6 +19,7 @@
 #include "common/light.h"
 #include "common/model.h"
 #include "common/wrapper_glfw.h"
+#include "common/utils.h"
 
 void init(GLWrapper *glw);
 void render(Shader *overrideShader = nullptr);
@@ -26,6 +27,7 @@ void reshape(GLFWwindow *window, int w, int h);
 void keyCallback(GLFWwindow *window, int key, int action, int mods);
 
 void drawStatic(std::stack<glm::mat4> &model, Shader *overrideShader);
+void drawTVs(std::stack<glm::mat4> &model, Shader *overrideShader);
 void drawMainLightSphere(std::stack<glm::mat4> &model);
 
 int main();

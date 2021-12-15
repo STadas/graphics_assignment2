@@ -1,0 +1,12 @@
+# Blender MTL File: 'graphics_assignment.blend'
+# Material Count: 1
+
+newmtl tv_display
+Ns 728.999998
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 1.878733 1.878733 1.878733
+Ni 1.450000
+d 1.000000
+illum 2
