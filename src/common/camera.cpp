@@ -10,6 +10,5 @@ OrbitCamera::OrbitCamera(glm::vec3 position, glm::vec3 target, glm::vec3 up)
     , up(up)
     , yaw(0.f)
     , pitch(0.f)
-    , radius(2.f)
 {
 }

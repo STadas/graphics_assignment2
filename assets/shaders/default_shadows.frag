@@ -72,6 +72,6 @@ void main()
                                attK2 * length(flight_pos) +
                                attK3 * pow(length(flight_pos), 2));
 
-    vec3 res = ambient + attenuation * (1.f - shadow()) * (diffuse + specular);
+    vec3 res = ambient + attenuation * (1.f - shadow() * attenuation) * (diffuse + specular);
     output_color = vec4(res, 1.f);
 }

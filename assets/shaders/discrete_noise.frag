@@ -1,6 +1,6 @@
 #version 420
 
-//TODO: change seed based on a time uniform
+// setting 1.f as default in case no time is passed
 uniform float time = 1.f;
 
 in vec2 ftex_coords;

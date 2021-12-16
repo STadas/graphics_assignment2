@@ -16,8 +16,6 @@ struct OrbitCamera {
     GLfloat yaw;
     GLfloat pitch;
 
-    GLfloat radius;
-
     glm::mat4 projection;
     glm::mat4 view;
 
