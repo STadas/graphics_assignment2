@@ -60,7 +60,7 @@ GLWrapper::GLWrapper(int width, int height, const char *title)
     std::cout << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 
     /* Can set the Window title at a later time if you wish*/
-    glfwSetWindowTitle(window, "Assignment 1");
+    glfwSetWindowTitle(window, title);
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, true);
 }

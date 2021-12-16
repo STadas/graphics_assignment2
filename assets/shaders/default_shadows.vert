@@ -37,9 +37,9 @@ void main()
 	mat3 normalmatrix = mat3(transpose(inverse(mv_matrix)));
 
 	ffrag_pos = vec3(transform.model * h_position);
-	fview_dir = (mv_matrix * h_position).xyz;
+	fview_dir = normalize(-vec3((mv_matrix * h_position)));
 	fnormal = normalize(normalmatrix * normal);
-	flight_pos = (transform.view * h_lightpos - (mv_matrix * h_position)).xyz;
+	flight_pos = vec3(transform.view * h_lightpos - (mv_matrix * h_position));
 	ftex_coords = tex_coords;
 
 	gl_Position = (transform.projection * mv_matrix) * h_position;

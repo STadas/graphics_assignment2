@@ -32,7 +32,6 @@ out vec4 output_color;
 void main()
 {
     vec3 tex_diff = texture(material.texture_diffuse1, ftex_coords).rgb;
-    /* tex_diff = vec3(0.5f, 0.5f, 0.5f); */
     vec3 tex_normal = texture(material.texture_normal1, ftex_coords).rgb;
 
     vec3 ambient = light.ambient * material.ambient * tex_diff;
@@ -51,7 +50,6 @@ void main()
                                attK2 * length(flight_pos) +
                                attK3 * pow(length(flight_pos), 2));
 
-    vec3 res = attenuation * (ambient + (diffuse + specular));
+    vec3 res = ambient + attenuation * (diffuse + specular);
     output_color = vec4(res, 1.f);
 }
-

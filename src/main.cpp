@@ -21,14 +21,15 @@ glm::vec3 backgroundColor;
 /* shadows */
 Texture shadowMap;
 GLuint depthMapFBO;
-const GLfloat farPlane = 200.f;
+const GLfloat farPlane = 100.f;
 const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
 /* shader programs */
 Shader *emissiveShader;
-Shader *defaultShader;
 Shader *depthShader;
+Shader *discreteNoiseShader;
 
+Shader *defaultShader;
 /* Shader *texturedShader; */
 Shader *texturedNMapShader;
 
@@ -48,6 +49,7 @@ std::pair<transforms_t, transforms_t> tvTransforms;
 
 /* animation helpers */
 GLfloat speed;
+GLfloat currTime;
 
 /**
  * initialize glew, set variables etc.
@@ -76,16 +78,18 @@ void init(GLWrapper *glw)
 
     /* make lights */
     backgroundColor = glm::vec3(0.4f, 0.4f, 0.8f);
-    mainLight = new Light(glm::vec4(0.f, 1.f, 0.f, 1.f), 0.4f * backgroundColor, 1.f, 1.f);
+    mainLight = new Light(glm::vec4(0.f, 0.0f, 0.f, 1.f), 0.4f * backgroundColor, 1.f, 1.f);
 
     /* set animation variables */
     speed = 1.f;
 
     /* load shaders */
+    emissiveShader =
+        new Shader("assets/shaders/default.vert", "assets/shaders/emissive.frag");
     defaultShader =
         new Shader("assets/shaders/default.vert", "assets/shaders/default.frag");
-    emissiveShader =
-        new Shader("assets/shaders/basic.vert", "assets/shaders/emissive.frag");
+    discreteNoiseShader =
+        new Shader("assets/shaders/default.vert", "assets/shaders/discrete_noise.frag");
     depthShader =
         new Shader("assets/shaders/depth.vert", "assets/shaders/depth.frag", "assets/shaders/depth.geom");
     /* texturedShader = */
@@ -147,6 +151,7 @@ void init(GLWrapper *glw)
  */
 void loop()
 {
+    currTime = glfwGetTime();
     /* set background color to blue */
     glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.f);
 
@@ -254,7 +259,10 @@ void drawTVs(std::stack<glm::mat4> &model, Shader *overrideShader)
             else
             {
                 tvBodyModel->draw(defaultShadowsShader, camera, mainLight, model.top(), farPlane);
-                tvScreenModel->draw(emissiveShader, camera, mainLight, model.top(), farPlane);
+
+                discreteNoiseShader->use();
+                discreteNoiseShader->setFloat("time", currTime);
+                tvScreenModel->draw(discreteNoiseShader, camera, mainLight, model.top(), farPlane);
             }
         }
         model.pop();
@@ -327,7 +335,7 @@ void keyCallback(GLFWwindow *window, int key, int s, int action, int mods)
 
 int main()
 {
-    GLWrapper *glw = new GLWrapper(1024, 768, "Lab3 start example");
+    GLWrapper *glw = new GLWrapper(1024, 768, "Assignment 2");
 
     /* register the callback functions */
     glw->setLoopCallback(loop);
@@ -358,6 +366,7 @@ int main()
     /* delete shader pointers */
     delete defaultShader;
     delete emissiveShader;
+    delete discreteNoiseShader;
     /* delete texturedShader; */
     delete texturedNMapShader;
     delete depthShader;

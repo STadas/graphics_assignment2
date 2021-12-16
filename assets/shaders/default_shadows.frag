@@ -30,17 +30,26 @@ out vec4 output_color;
 
 float shadow()
 {
-    // get vector between fragment position and light position
     vec3 to_light = ffrag_pos - light.position;
-    // use the fragment to light vector to sample from the depth map    
-    float closest_depth = texture(material.cube_map1, to_light).r;
-    // it is currently in linear range between [0,1], let's re-transform it back to original depth value
-    closest_depth *= far_plane;
-    // now get current linear depth as the length between the fragment and light position
     float curr_depth = length(to_light);
-    // test for shadows
-    float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
-    float shadow = curr_depth - bias > closest_depth ? 1.0 : 0.0;        
+    float shadow = 0.f;
+    float bias = 0.05; 
+    float samples = 4.f;
+    float offs = 0.1;
+    for(float x = -offs; x < offs; x += offs / (samples * 0.5))
+    {
+        for(float y = -offs; y < offs; y += offs / (samples * 0.5))
+        {
+            for(float z = -offs; z < offs; z += offs / (samples * 0.5))
+            {
+                float closest_depth = texture(material.cube_map1, to_light + vec3(x, y, z)).r; 
+                closest_depth *= far_plane;   // undo mapping [0;1]
+                if(curr_depth - bias > closest_depth)
+                    shadow += 1.f;
+            }
+        }
+    }
+    shadow /= pow(samples, 3);
 
     return shadow;
 }
@@ -63,6 +72,6 @@ void main()
                                attK2 * length(flight_pos) +
                                attK3 * pow(length(flight_pos), 2));
 
-    vec3 res = attenuation * (ambient + (1.f - shadow()) * (diffuse + specular));
+    vec3 res = ambient + attenuation * (1.f - shadow()) * (diffuse + specular);
     output_color = vec4(res, 1.f);
 }

@@ -33,7 +33,6 @@ std::string readFile(const char *filePath)
 
 transforms_t parseTransformsSection(std::string s)
 {
-    std::cout << "--------------------" << std::endl;
     std::stringstream ssInput;
     ssInput.str(s);
     transforms_t transforms;
@@ -43,15 +42,10 @@ transforms_t parseTransformsSection(std::string s)
         std::stringstream ssLine;
         ssLine.str(line);
         for (std::string floatStr; getline(ssLine, floatStr, ','); )
-        {
-            /* std::cout << floatStr << " "; */
             pos.push_back(std::stof(floatStr));
-        }
+
         if (pos.size() == 3)
-        {
             transforms.push_back(glm::vec3(pos[0], pos[1], pos[2]));
-            std::cout << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
-        }
     }
     return transforms;
 }

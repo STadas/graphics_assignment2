@@ -26,7 +26,7 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 tex_coords;
 
 out vec2 ftex_coords;
-out vec3 fposition, fnormal, flight_dir;
+out vec3 fview_dir, fnormal, flight_pos;
 
 void main()
 {
@@ -35,9 +35,9 @@ void main()
 	mat4 mv_matrix = transform.view * transform.model;
 	mat3 normalmatrix = mat3(transpose(inverse(mv_matrix)));
 
-	fposition = (mv_matrix * h_position).xyz;
+	fview_dir = normalize(-vec3((mv_matrix * h_position)));
+	flight_pos = vec3(transform.view * h_lightpos - (mv_matrix * h_position));
 	fnormal = normalize(normalmatrix * normal);
-	flight_dir = (transform.view * h_lightpos).xyz - fposition;
 	ftex_coords = tex_coords;
 
 	gl_Position = (transform.projection * mv_matrix) * h_position;

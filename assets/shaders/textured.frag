@@ -24,47 +24,30 @@ uniform Material material;
 uniform Light light;
 
 in vec2 ftex_coords;
-in vec3 fposition, fnormal, flight_dir;
+in vec3 fview_dir, fnormal, flight_pos;
 
 out vec4 output_color;
 
-vec4 blinn_phong_specular(vec3 L, vec3 N)
-{
-    vec3 V = normalize(-fposition);
-    vec3 R = normalize(L + V);  
-    float spec = pow(max(dot(N, R), 0.f), material.shininess);
-
-    return vec4(light.specular * (spec * material.specular), 1.f);
-}
-
-vec4 diffuse(vec3 L, vec3 N, vec4 tex_diff)
-{
-    float diff = max(dot(N, L), 0.f);
-
-    return light.diffuse * (diff * tex_diff);
-}
-
 void main()
 {
-    // helper variables
-    vec4 tex_diff = texture(material.texture_diffuse1, ftex_coords);
-    float light_dist = length(flight_dir);
-    vec3 L = normalize(flight_dir);
-    vec3 N = normalize(fnormal);
+    vec3 tex_diff = texture(material.texture_diffuse1, ftex_coords).rgb;
 
-    // attenuation
+    vec3 ambient = light.ambient * material.ambient * tex_diff;
+    vec3 N = normalize(fnormal);
+    vec3 L = normalize(flight_pos);
+    vec3 R = normalize(L + fview_dir);
+
+    vec3 diffuse = light.diffuse * (max(dot(N, L), 0.f) * tex_diff);
+    float spec = pow(max(dot(N, R), 0.f), material.shininess);
+    vec3 specular = light.specular * spec * material.specular;
+
     float attK1 = 0.7f;
     float attK2 = 0.05f;
     float attK3 = 0.001f;
     float attenuation = 1.f / (attK1 +
-                               attK2 * light_dist +
-                               attK3 * pow(light_dist, 2));
+                               attK2 * length(flight_pos) +
+                               attK3 * pow(length(flight_pos), 2));
 
-    vec3 ambient = light.ambient * material.ambient * tex_diff;
-    vec4 specular = blinn_phong_specular(L, N);
-    vec4 diff_spec = diffuse(L, N, tex_diff) + specular;
-
-    output_color = attenuation * diff_spec + ambient;
-    output_color.a = material.opacity;
+    vec3 res = ambient + attenuation * (diffuse + specular);
+    output_color = vec4(res, 1.f);
 }
-
